@@ -432,22 +432,25 @@ public class DBproject{
 			String doc_id = in.readLine();
 			System.out.print("\tEnter Appointment's ID: ");
 			String appt_id = in.readLine();
-			int rows = executeQuery("SELECT * FROM has_appointment H WHERE H.appt_id=" + appt_id + " AND H.doctor_id=" + doc_id + ";");
+			String query = "SELECT * FROM has_appointment H WHERE H.appt_id=" + appt_id + " AND H.doctor_id=" + doc_id + ";";
+			int rows = esql.executeQuery(query);
 			if(rows == 0) {
 				System.out.print("Doctor with ID " + doc_id + " does not have Appointment with ID " + appt_id + "\n\n");
 				return;
 			}
-			List<List<String>> list = executeQueryAndReturnResult("SELECT A.status FROM Appointment A WHERE A.appnt_ID=" + appt_id + ";");
+			query = "SELECT A.status FROM Appointment A WHERE A.appnt_ID=" + appt_id + ";";
+			List<List<String>> list = esql.executeQueryAndReturnResult(query);
 			String status = list.get(0).get(0);
 			String newStatus = "";
 			if(status.equals("AV")) {
 				newStatus = "AC";
+				System.out.print(newStatus);
 			}
 			else if(status.equals("AC") || status.equals("WL")) {
 				newStatus = "WL";
 			}
 			else {
-				System.out.print("This Appointment has passed. Please enter");
+				System.out.print("This Appointment has passed. Please enter a different appointment\n\n");
 				return;
 			}
 			System.out.print("\tEnter Patient Details:\n");
@@ -478,11 +481,8 @@ public class DBproject{
 			}
 			System.out.print("\t\tEnter Patient's address: ");
 			String address = in.readLine();
-
-			List<List<String>> list = executeQueryAndReturnResult("SELECT * FROM Patient P WHERE P.name=\'" + name + "\' AND P.age=" + age + " AND P.gender=\'" + gender + "\' AND P.address=\'" + address + "\';");
+			list = esql.executeQueryAndReturnResult("SELECT * FROM Patient P WHERE P.name=\'" + name + "\' AND P.age=" + age + " AND P.gtype=\'" + gender + "\' AND P.address=\'" + address + "\';");
 			int patient_id = -1;
-			String query = "";
-			//print list for test?
 			if(list.size()==0) {
 				patient_id = esql.executeQuery("SELECT * FROM Patient;");
 				query = "INSERT INTO Patient VALUES (";
@@ -492,19 +492,22 @@ public class DBproject{
 			else {
 				patient_id = Integer.parseInt(list.get(0).get(0));
 				System.out.print(patient_id); //testing
-				esql.executeUpdate("UPDATE Patient SET number_of_appts=number_of_appts+1 WHERE patient_ID=" + patient_id + ";");
+				query = "UPDATE Patient SET number_of_appts=number_of_appts+1 WHERE patient_ID=" + patient_id + ";";
+				esql.executeUpdate(query);
 			}
-			list = executeQueryAndReturnResult("SELECT DP.hid FROM Department DP, Doctor DC WHERE DC.doctor_ID=" + doc_id + " AND DP.dept_ID=DC.did;");
+			query = "SELECT DP.hid FROM Department DP, Doctor DC WHERE DC.doctor_ID=" + doc_id + " AND DP.dept_ID=DC.did;";
+			list = esql.executeQueryAndReturnResult(query);
 			int hos_id = Integer.parseInt(list.get(0).get(0));
 			query = "INSERT INTO searches VALUES(";
 			query += hos_id + ", " + patient_id + ", " + appt_id + ");";
 			esql.executeUpdate(query);
-			esql.executeUpdate("UPDATE Appointment SET status=\'" + newStatus + "\' WHERE appnt_ID=" + appt_id + ";");
-			System.out.print("\nSuccesfully made Appointment!\n");
+			query = "UPDATE Appointment SET status=\'" + newStatus + "\' WHERE appnt_ID=" + appt_id + ";";
+			esql.executeUpdate(query);
+			System.out.print("\nSuccesfully made Appointment!\n\n");
 		}
 		catch(Exception e) {
-            System.err.println (e.getMessage());
-        }
+            		System.err.println (e.getMessage());
+        	}
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) {//5
@@ -526,7 +529,7 @@ public class DBproject{
 			}
                 }
                 catch(Exception e) {
-			System.out.print("Invalid Query. Did you check if your dates are formatted correctly? Does the doctor ID exist?");
+			System.out.print("Invalid Query. Did you check if your dates are formatted correctly? Does the doctor ID exist?\n");
                         System.err.println (e.getMessage());
                 }
                 System.out.print("\n");
@@ -549,7 +552,7 @@ public class DBproject{
                         }
                 }
                 catch(Exception e) {
-			System.out.print("Invalid Query. Did you check if your date is formatted correctly? Does the department exist?");
+			System.out.print("Invalid Query. Did you check if your date is formatted correctly? Does the department exist?\n");
                         System.err.println (e.getMessage());
                 }
                 System.out.print("\n");
@@ -558,16 +561,16 @@ public class DBproject{
 	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) {//7
 		// Count number of different types of appointments per doctors and list them in descending order
 		try{
-			String query = "SELECT D.doctor_ID, D.name, A.status, COUNT(*) AS numAppointments ";
+			String query = "SELECT D.doctor_ID AS ID, D.name AS doctor_name, A.status, COUNT(*) AS numAppointments ";
 			query += "FROM Doctor D, Appointment A, has_appointment H ";
 			query += "WHERE D.doctor_ID=H.doctor_id AND A.appnt_ID=H.appt_id ";
 			query += "GROUP BY D.doctor_ID, D.name, A.status ";
-			query += "ORDER BY Desc numAppointments;";
+			query += "ORDER BY numAppointments DESC;";
 			esql.executeQueryAndPrintResult(query);
 		}
 		catch(Exception e) {
 			System.err.println (e.getMessage());
-        }
+        	}
 		System.out.print("\n");
 	}
 
@@ -575,20 +578,26 @@ public class DBproject{
 	public static void FindPatientsCountWithStatus(DBproject esql) {//8
 		// Find how many patients per doctor there are with a given status (i.e. PA, AC, AV, WL) and list that number per doctor.
 		try{
-                        String query = "Select D.name, count(B.status) AS PV from Doctor D, has_appointment A , Appointment B  WHERE D.doctor_ID = A.doctor_id AND B.appnt_ID = A.appt_ID AND B.status = '";
-                        System.out.print("\tEnter Patient Status: ");
+                        String query = "SELECT D.doctor_ID, D.name, A.status, COUNT(S.pid) AS numPatients FROM Doctor D, Appointment A, has_appointment H, searches S ";
+			query += "WHERE D.doctor_ID=H.doctor_id AND A.appnt_ID=H.appt_id AND S.aid=A.appnt_ID AND A.status=\'";
+                        System.out.print("\tEnter Patient Status (AV, AC, PA, WL): ");
                         String status = in.readLine();
+			while(!(status.equals("AV") || status.equals("AC") || status.equals("WL") || status.equals("PA"))) {
+                                System.out.print("\t\tPlease enter a status value of AV, AC, WL, or PA: ");
+                                status = in.readLine();
+                        }
                         
                         System.out.print("\n");
-                        query +=  status + "' group by D.name;";
+                        query +=  status + "\' GROUP BY D.doctor_ID, D.name, A.status;";
                       
                         int rows = esql.executeQueryAndPrintResult(query);
-                      
+			if(rows == 0) {
+                                System.out.print("There are no patients for any doctor with the given status.\n");
+                        }
                 }
-        catch(Exception e) {
-			System.out.print("Invalid Query. Did you make sure your patient status is either PA, AC, AV, or WL?");
-            System.err.println (e.getMessage());
-        }
-        System.out.print("\n");
+        	catch(Exception e) {
+            		System.err.println (e.getMessage());
+        	}
+        	System.out.print("\n");
 	}
 }
