@@ -444,7 +444,6 @@ public class DBproject{
 			String newStatus = "";
 			if(status.equals("AV")) {
 				newStatus = "AC";
-				System.out.print(newStatus);
 			}
 			else if(status.equals("AC") || status.equals("WL")) {
 				newStatus = "WL";
@@ -491,7 +490,6 @@ public class DBproject{
 			}
 			else {
 				patient_id = Integer.parseInt(list.get(0).get(0));
-				System.out.print(patient_id); //testing
 				query = "UPDATE Patient SET number_of_appts=number_of_appts+1 WHERE patient_ID=" + patient_id + ";";
 				esql.executeUpdate(query);
 			}
