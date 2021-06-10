@@ -365,7 +365,7 @@ public class DBproject{
 		try{
 			int appnt_ID = esql.executeQuery("SELECT * FROM Appointment;");
                         String query = "INSERT INTO Appointment VALUES (";
-                        System.out.print("\tEnter the date of the appointment (YYYY-MM-DD): ");
+                        System.out.print("\tEnter the date of the appointment (MM/DD/YYYY or YYYY-MM-DD): ");
                         String adate = in.readLine();
                         System.out.print("\tEnter the time slot of the appointment in military time (HH:MM-HH:MM): ");
                         String time_slot = in.readLine();
@@ -516,20 +516,20 @@ public class DBproject{
                         String query = "SELECT A.appnt_ID AS id, A.adate AS App_Date, A.time_slot AS Time_slot, A.status AS Status FROM has_appointment H, Appointment A WHERE H.doctor_id=";
                         System.out.print("\tEnter Doctor's ID: ");
                         String id = in.readLine();
-                        System.out.print("\tEnter beginning of date range (YYYY-MM-DD): ");
+                        System.out.print("\tEnter beginning of date range (MM/DD/YYYY or YYYY-MM-DD): ");
                         String begin = in.readLine();
-                        System.out.print("\tEnter end of date range (YYYY-MM-DD): ");
+                        System.out.print("\tEnter end of date range (MM/DD/YYYY or YYYY-MM-DD): ");
                         String end = in.readLine();
                         System.out.print("\n");
                         query += id + " AND H.appt_id=A.appnt_ID AND (A.adate BETWEEN ";
 			query += "\'" + begin + "\' AND \'" + end + "\') AND (A.status=\'AV\' OR A.status=\'AC\');";
                         int rows = esql.executeQueryAndPrintResult(query);
 			if(rows == 0) {
-				System.out.print("There are no available or active appointments for this doctor in the specified date range.\n");
+				System.out.print("There are no available or active appointments for this doctor in the specified date range, or the doctor ID does not exist.\n");
 			}
                 }
                 catch(Exception e) {
-			System.out.print("Invalid Query. Did you check if your dates are formatted correctly? Does the doctor ID exist?\n");
+			System.out.print("Invalid Query. Did you check if your dates are formatted correctly?\n");
                         System.err.println (e.getMessage());
                 }
                 System.out.print("\n");
@@ -548,11 +548,11 @@ public class DBproject{
                         query += "\'" + date + "\' AND A.status=\'AV\';";
                         int rows = esql.executeQueryAndPrintResult(query);
                         if(rows == 0) {
-                                System.out.print("There are no available appointments for this department on the specified date.\n");
+                                System.out.print("There are no available appointments for this department on the specified date or the department does not exist.\n");
                         }
                 }
                 catch(Exception e) {
-			System.out.print("Invalid Query. Did you check if your date is formatted correctly? Does the department exist?\n");
+			System.out.print("Invalid Query. Did you check if your date is formatted correctly?\n");
                         System.err.println (e.getMessage());
                 }
                 System.out.print("\n");
